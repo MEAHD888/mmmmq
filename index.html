@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مترجم لغة الإشارة الذكي - Google AI</title>
+    <!-- استدعاء مكتبات جوجل الذكية للتعرف على اليدين مباشرة في المتصفح -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 3px solid #38bdf8;
+        }
+        video {
+            width: 100%;
+            display: block;
+            transform: scaleX(-1); /* انعكاس مرآة للكاميرا */
+        }
+        .output-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #334155;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>مشروع ترجمة لغة الإشارة (الذكاء الاصطناعي المباشر)</h2>
+        <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
+        <div class="output-box" id="output">جاري تحميل نموذج الذكاء الاصطناعي للكاميرا...</div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const outputElement = id => document.getElementById(id);
+
+        function onResults(results) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                // تم اكتشاف يد بنجاح عبر ذكاء جوجل الاصطناعي
+                document.getElementById('output').innerText = "تم رصد اليد بنجاح! (جاهز للترجمة)";
+                
+                // هنا يمكنك قراءة إحداثيات الأصابع من (results.multiHandLandmarks[0]) 
+                // ومطابقتها مع الحروف أو الإشارات التي تريد تدريب المشروع عليها
+            } else {
+                document.getElementById('output').innerText = "الرجاء إظهار اليد أمام الكاميرا...";
+            }
+        }
+
+        // إعداد نموذج اليد من جوجل
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        // تشغيل كاميرا المتصفح وربطها بالنموذج لحظياً
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 640,
+            height: 480
+        });
+
+        camera.start().then(() => {
+            document.getElementById('output').innerText = "الكاميرا تعمل، أظهر إشارتك الآن!";
+        }).catch(err => {
+            document.getElementById('output').innerText = "خطأ في تشغيل الكاميرا: " + err;
+        });
+    </script>
+
+</body>
+</html>
